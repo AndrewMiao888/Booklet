@@ -1,4 +1,7 @@
-const sources = [
+export type InteractionKind = 'scale' | 'bottle' | 'credit' | 'gyre' | 'swap' | 'laundry' | 'recycle' | 'checklist'
+export type GuideSource = { type: string; title: string; note: string; url: string; label: string }
+export type GuidePage = { title: string; kicker: string; body: string; art: string; cover?: boolean; back?: boolean; subtitle?: string; callout?: string; interaction?: InteractionKind; refs?: number[] }
+export const sources: GuideSource[] = [
   {type:"OCEAN RESEARCH · 2018",title:"The Great Pacific Garbage Patch is rapidly accumulating plastic",note:"Field measurements and a model estimate for the patch’s size, plastic mass and particle count.",url:"https://www.nature.com/articles/s41598-018-22939-w",label:"Read the paper in Scientific Reports ↗"},
   {type:"BOTTLED WATER · 2024",title:"Rapid single-particle chemical imaging of nanoplastics in bottled water",note:"The Columbia–Rutgers study of three popular brands: an average of about 240,000 plastic particles per litre, mostly nanoplastics.",url:"https://www.pnas.org/doi/10.1073/pnas.2300582121",label:"Read the research in PNAS ↗"},
   {type:"PUBLIC HEALTH · 2022",title:"Dietary and inhalation exposure to nano- and microplastic particles",note:"WHO’s evidence review identifies important knowledge gaps and calls for better exposure and health research.",url:"https://www.who.int/publications/i/item/9789240054608/",label:"Read the WHO report ↗"},
@@ -11,7 +14,7 @@ const sources = [
   {type:"PLASTIC POLLUTION · GLOBAL",title:"Turning off the Tap: how the world can end plastic pollution",note:"UNEP’s overview of options to reduce unnecessary plastic, expand reuse and improve waste systems.",url:"https://www.unep.org/resources/turning-off-tap-end-plastic-pollution-create-circular-economy",label:"Read the UNEP report ↗"}
 ];
 
-const pages = [
+export const pages: GuidePage[] = [
   {title:"Small things.<br><em>Big ocean.</em>",kicker:"FIELD GUIDE / Nº 001",cover:true,subtitle:"AN INTERACTIVE FIELD GUIDE",body:`<p class="cover-note">A curious journey through the plastic we can’t always see — and the small shifts that can make a difference.</p>`,art:"cover"},
   {title:"Meet the material",kicker:"01 / WHAT PLASTIC IS",body:`<p>Plastic is a family of materials made from long, linked molecules called <strong>polymers</strong>. Most conventional plastics start with fossil fuels; some newer materials use plant-based ingredients.</p><p>Heat and pressure let manufacturers shape plastic into a remarkable range of things — from soft film to tough pipe. Different recipes create different properties, additives and end-of-life challenges.</p>`,callout:`<strong>One word, many materials.</strong> “Plastic” isn’t a single substance with one recycling recipe.`,art:"molecules"},
   {title:"A number is a start",kicker:"02 / GET TO KNOW THE CODES",body:`<p>Packaging often carries a resin code: <strong>1 PET</strong> bottles, <strong>2 HDPE</strong> jugs, <strong>4 LDPE</strong> film, <strong>5 PP</strong> tubs. They identify a plastic type; they are not a promise that your local kerbside service accepts it.</p><p>Black plastic, tiny pieces, mixed materials and food residue can complicate sorting. Always check the collection rules where you live.</p>`,callout:`<strong>When in doubt, look it up.</strong> Local rules are the ones that count.`,art:"codes"},
@@ -46,16 +49,22 @@ const pages = [
   {title:"The story is still being written",kicker:"32 / BACK COVER",back:true,body:`<p class="cover-note">A small guide to the tiny fragments, wide currents and better habits that connect us to the ocean.</p>`,art:"cover"}
 ];
 
-const chapters = [
-  {start:0,label:"A small beginning"},{start:1,label:"Meet the material"},{start:5,label:"Zooming way in"},{start:8,label:"Follow the water"},{start:12,label:"Out in the blue"},{start:16,label:"Claims & evidence"},{start:20,label:"Make a better swap"},{start:24,label:"Your field notes"}
-];
-const state={spread:0,saved:Number(localStorage.getItem("ocean-bookmark")||0),toastTimer:null};
-const $=selector=>document.querySelector(selector);
-const spreadEl=$("#spread"), bookSection=$("#book"), intro=$(".intro-screen"), sourcesSection=$("#sources");
+export const chapters = [
+  { start: 0, label: 'A small beginning' },
+  { start: 1, label: 'Meet the material' },
+  { start: 5, label: 'Zooming way in' },
+  { start: 8, label: 'Follow the water' },
+  { start: 12, label: 'Out in the blue' },
+  { start: 16, label: 'Claims & evidence' },
+  { start: 20, label: 'Make a better swap' },
+  { start: 24, label: 'Your field notes' },
+]
 
-function escHtml(value){return value;}
-function artSvg(type){
-  const svgs={
+export function artSvg(type: string){
+  const svgs: Record<string, string> = {
+    everyday:`<svg class="chapter-art" viewBox="0 0 300 130"><path d="M50 88h44l-7-48H57z" fill="#dce8e1" stroke="#80a498" stroke-width="2"/><path d="M61 40V29h22v11" fill="#9caa98"/><rect x="122" y="55" width="54" height="38" rx="5" fill="#ead5a4" stroke="#bd9c67" stroke-width="2"/><path d="M131 55V43h36v12" fill="none" stroke="#bd9c67" stroke-width="3"/><path d="M202 47l21 50m-12-54l21 50" stroke="#a699bb" stroke-width="7" stroke-linecap="round"/><text x="150" y="119" fill="#818579" font-family="monospace" text-anchor="middle" font-size="8">MANY MATERIALS · MANY USES</text></svg>`,
+    routes:`<svg class="chapter-art" viewBox="0 0 300 130"><circle cx="60" cy="47" r="19" fill="#e8d49c"/><path d="M60 68v22m-12-12l12 12 12-12" fill="none" stroke="#78978a" stroke-width="3"/><rect x="133" y="26" width="42" height="27" rx="7" fill="#dce8e1" stroke="#80a498"/><path d="M154 53v28m-12-12l12 12 12-12" fill="none" stroke="#78978a" stroke-width="3"/><path d="M42 102h218" stroke="#9bb4a4" stroke-width="4" stroke-linecap="round"/><g fill="#dc926c"><circle cx="98" cy="98" r="4"/><circle cx="113" cy="107" r="3"/><circle cx="204" cy="100" r="3"/></g><text x="150" y="124" fill="#818579" font-family="monospace" text-anchor="middle" font-size="8">PRIMARY + SECONDARY SOURCES</text></svg>`,
+    sources:`<svg class="chapter-art" viewBox="0 0 300 130"><path d="M80 29h89l32 32v62H80z" fill="#fbf9f2" stroke="#9db3a3" stroke-width="2"/><path d="M169 29v33h32m-98 8h66m-66 14h66m-66 14h48" fill="none" stroke="#b8c7b7" stroke-width="2"/><circle cx="215" cy="84" r="25" fill="#e7ecdf" stroke="#a9bfad"/><path d="M232 102l16 16" stroke="#668b7d" stroke-width="5" stroke-linecap="round"/><text x="215" y="88" fill="#61796e" font-family="monospace" text-anchor="middle" font-size="10">↗</text></svg>`,
     cover:`<svg viewBox="0 0 420 220" aria-hidden="true"><path d="M0 100c48-18 81 14 131 0s73-28 124-4 95 16 165-9" fill="none" stroke="#abc6b5" stroke-width="46" stroke-linecap="round"/><path d="M0 137c48-11 85 14 132 2s76-23 127-2 96 16 161-5" fill="none" stroke="#d0dfce" stroke-width="28" stroke-linecap="round"/><path d="M175 68l13-29 12 29 29 12-29 12-12 30-13-30-29-12z" fill="#dc926c"/><ellipse cx="275" cy="105" rx="70" ry="24" fill="#efcf91" transform="rotate(-10 275 105)"/><path d="M226 103c31-15 65-19 99-6l8 12c-38 12-73 13-107 4z" fill="#d49267"/><circle cx="91" cy="69" r="14" fill="#aa9bbd"/><circle cx="91" cy="69" r="7" fill="#e0e8db"/><circle cx="331" cy="162" r="6" fill="#8da99c"/></svg>`,
     molecules:`<svg class="chapter-art" viewBox="0 0 300 130"><path d="M35 71l43-29 43 28 43-28 43 28 43-29" fill="none" stroke="#88a79b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><g fill="#d9a06f"><circle cx="35" cy="71" r="11"/><circle cx="121" cy="70" r="11"/><circle cx="207" cy="70" r="11"/><circle cx="250" cy="41" r="11"/></g><g fill="#a699bb"><circle cx="78" cy="42" r="11"/><circle cx="164" cy="42" r="11"/></g><text x="34" y="112" fill="#819185" font-size="9" font-family="monospace">MONOMER → POLYMER → MATERIAL</text></svg>`,
     codes:`<svg class="chapter-art" viewBox="0 0 300 130"><g font-family="monospace" text-anchor="middle"><g transform="translate(18 25)"><path d="M20 0l18 10v30L20 50 2 40V10z" fill="#e5eadf" stroke="#91aa99"/><text x="20" y="28" font-size="14" fill="#416257">1</text><text x="20" y="66" font-size="8" fill="#818579">PET</text></g><g transform="translate(86 25)"><path d="M20 0l18 10v30L20 50 2 40V10z" fill="#f0e9dc" stroke="#ca9a72"/><text x="20" y="28" font-size="14" fill="#775d4c">2</text><text x="20" y="66" font-size="8" fill="#818579">HDPE</text></g><g transform="translate(154 25)"><path d="M20 0l18 10v30L20 50 2 40V10z" fill="#ece8f0" stroke="#a699bb"/><text x="20" y="28" font-size="14" fill="#6f627c">4</text><text x="20" y="66" font-size="8" fill="#818579">LDPE</text></g><g transform="translate(222 25)"><path d="M20 0l18 10v30L20 50 2 40V10z" fill="#e4eee8" stroke="#83a99d"/><text x="20" y="28" font-size="14" fill="#416257">5</text><text x="20" y="66" font-size="8" fill="#818579">PP</text></g></g></svg>`,
@@ -81,78 +90,5 @@ function artSvg(type){
     action:`<svg class="chapter-art" viewBox="0 0 300 130"><path d="M41 87c33 0 33-45 66-45s32 45 65 45 33-45 67-45" fill="none" stroke="#92ad9f" stroke-width="3" stroke-dasharray="5 4"/><g fill="#e3cd98" stroke="#bba16d"><circle cx="41" cy="87" r="15"/><circle cx="107" cy="42" r="15"/><circle cx="172" cy="87" r="15"/><circle cx="239" cy="42" r="15"/></g><path d="M232 37l7 5-8 4" fill="none" stroke="#648275" stroke-width="2"/><g fill="#526d60" font-family="monospace" text-anchor="middle" font-size="7"><text x="41" y="90">YOU</text><text x="107" y="45">ASK</text><text x="172" y="90">SHARE</text><text x="239" y="45">CHANGE</text></g></svg>`,
     closing:`<svg class="chapter-art" viewBox="0 0 300 130"><path d="M0 80c45-18 73 19 117 2s75-18 109 1 45 11 74-1M0 104c45-18 73 19 117 2s75-18 109 1 45 11 74-1" fill="none" stroke="#9ab5a6" stroke-width="2"/><path d="M148 21l7 17 18 7-18 7-7 18-7-18-18-7 18-7z" fill="#dc926c"/><circle cx="216" cy="65" r="9" fill="#e7cd92"/><circle cx="217" cy="65" r="4" fill="#f8f5eb"/><circle cx="78" cy="51" r="5" fill="#a699bb"/></svg>`
   };
-  return svgs[type]||svgs.tide;
+  return svgs[type] ?? svgs.tide;
 }
-
-function interactionHtml(kind){
-  if(kind==="scale")return `<div class="interaction-box"><div class="interaction-label">✳ MOVE THE SCALE</div><p>Drag to see how the size label changes. A sand grain is visible; a nanoplastic is much smaller than the smallest dot.</p><input class="scale-slider" type="range" min="0" max="100" value="30" aria-label="Explore particle scale"><div class="scale-meter"></div><div class="range-line"><span>VISIBLE</span><span class="range-value scale-value">MICROPLASTIC</span></div></div>`;
-  if(kind==="bottle")return `<div class="interaction-box"><div class="interaction-label">✳ TRY THE BOTTLE CALCULATOR</div><p>Apply the study’s average of about 240,000 particles per litre. This is an illustration, not a test of your bottle.</p><div class="range-line"><input class="bottle-slider" type="range" min="250" max="2000" step="250" value="1000" aria-label="Choose bottle volume in millilitres"><span class="range-value bottle-value">1,000 mL<br>≈ 240,000</span></div><div class="interaction-feedback">Particles counted included nano- and microplastics; most were nanoplastics.</div></div>`;
-  if(kind==="credit")return `<div class="interaction-box"><div class="interaction-label">✳ QUICK MYTH CHECK</div><p>What does “a credit card a week” actually represent?</p><div class="choice-list"><button class="choice-button" data-quiz="measured">A direct weekly measurement</button><button class="choice-button" data-quiz="estimate">A broad estimate with major uncertainty</button></div><div class="interaction-feedback quiz-feedback" aria-live="polite">Choose a card to reveal the answer.</div></div>`;
-  if(kind==="gyre")return `<div class="interaction-box"><div class="interaction-label">✳ TAP THE CURRENT</div><p>Why does debris gather in a gyre?</p><button class="flip-card" data-flip="gyre"><span class="flip-card-inner">Tap to reveal the slow-turning current clue ↗</span></button></div>`;
-  if(kind==="swap")return `<div class="interaction-box"><div class="interaction-label">✳ FIND A FIRST SWAP</div><p>Pick where you want to start. Try nearby refill and second-hand options.</p><div class="choice-list"><button class="choice-button" data-swap="drink">Drinks on the go</button><button class="choice-button" data-swap="shopping">Weekly shopping</button><button class="choice-button" data-swap="cleaning">Household refills</button></div><div class="interaction-feedback swap-feedback" aria-live="polite">Your easiest next step goes here.</div></div>`;
-  if(kind==="laundry")return `<div class="interaction-box"><div class="interaction-label">✳ PICK ONE LOW-FUSS HABIT</div><div class="choice-list"><button class="choice-button" data-habit="wear">Wear it a few more times</button><button class="choice-button" data-habit="wash">Wash full loads gently</button><button class="choice-button" data-habit="mend">Mend before replacing</button></div><div class="interaction-feedback habit-feedback" aria-live="polite">No special kit needed to start.</div></div>`;
-  if(kind==="recycle")return `<div class="interaction-box"><div class="interaction-label">✳ WHERE ARE YOU RECYCLING?</div><p>Choose the setting to reveal the best next step.</p><div class="choice-list"><button class="choice-button" data-place="Australia">Australia</button><button class="choice-button" data-place="elsewhere">Somewhere else</button></div><div class="interaction-feedback place-feedback" aria-live="polite">Use your local collection rules as the source of truth.</div></div>`;
-  if(kind==="checklist")return `<div class="interaction-box"><div class="interaction-label">✳ BUILD YOUR TINY WEEK PLAN</div><div class="checklist"><label class="check-row"><input type="checkbox" class="week-check"> Carry a bottle</label><label class="check-row"><input type="checkbox" class="week-check"> Take a reusable bag</label><label class="check-row"><input type="checkbox" class="week-check"> Refill a container</label><label class="check-row"><input type="checkbox" class="week-check"> Check local recycling</label></div><div class="interaction-feedback checklist-feedback" aria-live="polite">0 small actions picked.</div></div>`;
-  return "";
-}
-
-function pageHtml(page,index,side){
-  const pageClass=["book-page",side==="right"?"right-page":"",page.cover?"cover-page":"",page.back?"blank-page":""].filter(Boolean).join(" ");
-  const kickerText=page.cover?"FIELD GUIDE / Nº 001":page.back?"BACK COVER":`${String(index).padStart(2,"0")} / ${(page.kicker||"FIELD NOTES").split(" / ").slice(1).join(" / ")}`;
-  const art=page.art?`<div class="page-visual">${page.cover||page.back?`<div class="cover-graphic">${artSvg(page.art)}</div>`:artSvg(page.art)}${!page.cover&&!page.back?`<span class="illustration-caption">FIELD SKETCH / ${String(index+1).padStart(2,"0")}</span>`:""}</div>`:"";
-  const copy=(page.body||"").replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noreferrer">$1</a>');
-  const callout=page.callout?`<div class="page-callout">${page.callout}</div>`:"";
-  const refs=page.refs?.length?`<div class="inline-cites">SOURCE${page.refs.length>1?"S":""}: ${page.refs.map((ref,index)=>`<a href="${sources[ref].url}" target="_blank" rel="noreferrer">${sources[ref].type.split(" · ")[0]}${page.refs.length>1?` ${index+1}`:""} ↗</a>`).join(" · ")}</div>`:"";
-  return `<article class="${pageClass}" aria-label="Page ${index+1}: ${page.title.replace(/<[^>]*>/g,"")}"><div class="page-kicker"><span>${kickerText}</span><span class="page-number">${String(index+1).padStart(2,"0")} / 32</span></div><h3 class="page-title">${page.title}</h3><div class="page-copy">${copy}</div>${callout}${page.interaction?interactionHtml(page.interaction):""}${refs}${art}<footer class="page-footer"><span>SMALL THINGS, BIG OCEAN</span><span>${String(index+1).padStart(2,"0")}</span></footer></article>`;
-}
-
-function render(){
-  const left=state.spread*2,right=left+1;
-  spreadEl.innerHTML=pageHtml(pages[left],left,"left")+pageHtml(pages[right],right,"right");
-  spreadEl.dataset.firstSpread=String(state.spread===0);
-  const start=String(left+1).padStart(2,"0"),end=String(right+1).padStart(2,"0");
-  $("#spread-count").textContent=`${start} — ${end} / 32`;
-  $("#page-label").textContent=`PAGES ${start}–${end}`;
-  const chapter=[...chapters].reverse().find(item=>left>=item.start)||chapters[0];
-  $("#chapter-label").textContent=chapter.label.toUpperCase();
-  $("#progress-bar").style.width=`${((right+1)/32)*100}%`;
-  $("#previous").disabled=state.spread===0;$("#next").disabled=state.spread===15;
-  $("#bookmark").setAttribute("aria-pressed",String(state.saved===state.spread));
-  $("#bookmark").innerHTML=state.saved===state.spread?"♥ <span>Saved</span>":"♡ <span>Save place</span>";
-  const isFirst=state.spread===0;
-  $("#chapter-nav").innerHTML=chapters.map((item,index)=>`<button class="chapter-link ${item.start<=left&&left<(chapters[index+1]?.start??32)?"active":""}" data-spread="${Math.floor(item.start/2)}"><span>${String(index+1).padStart(2,"0")}</span><span>${item.label}</span></button>`).join("");
-  $("#saved-note").hidden=localStorage.getItem("ocean-bookmark")==null;
-  if(isFirst)$("#next").setAttribute("aria-label","Next pages");
-}
-
-function toast(message){const node=$("#toast");node.textContent=message;node.classList.add("show");clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>node.classList.remove("show"),2100)}
-function showBook(){intro.hidden=true;sourcesSection.hidden=true;bookSection.hidden=false;window.location.hash="book";render();bookSection.scrollIntoView({behavior:"smooth",block:"start"})}
-function showSources(){bookSection.hidden=true;intro.hidden=true;sourcesSection.hidden=false;$("#source-list").innerHTML=sources.map(source=>`<article class="source-card"><div class="source-type">${source.type}</div><h3>${source.title}</h3><p>${source.note}</p><a href="${source.url}" target="_blank" rel="noreferrer">${source.label}</a></article>`).join("");window.location.hash="sources";sourcesSection.scrollIntoView({behavior:"smooth",block:"start"})}
-
-$("#open-book").addEventListener("click",showBook);
-$("#close-book").addEventListener("click",()=>{bookSection.hidden=true;sourcesSection.hidden=true;intro.hidden=false;window.location.hash="home";window.scrollTo({top:0,behavior:"smooth"})});
-$("#next").addEventListener("click",()=>{if(state.spread<15){state.spread++;render()}});
-$("#previous").addEventListener("click",()=>{if(state.spread>0){state.spread--;render()}});
-$("#chapter-nav").addEventListener("click",event=>{const button=event.target.closest("[data-spread]");if(button){state.spread=Number(button.dataset.spread);render();spreadEl.scrollIntoView({behavior:"smooth",block:"center"})}});
-$("#bookmark").addEventListener("click",()=>{state.saved=state.spread;localStorage.setItem("ocean-bookmark",String(state.saved));render();toast("Your place is saved on this device.")});
-$("#toggle-notes").addEventListener("click",()=>{const panel=$("#notes-panel");panel.hidden=!panel.hidden;$("#toggle-notes").setAttribute("aria-expanded",String(!panel.hidden))});
-$("#close-notes").addEventListener("click",()=>{$("#notes-panel").hidden=true;$("#toggle-notes").setAttribute("aria-expanded","false")});
-$("#sources-link").addEventListener("click",event=>{event.preventDefault();showSources()});
-$("#return-book").addEventListener("click",showBook);
-document.addEventListener("keydown",event=>{if(bookSection.hidden||event.target.matches("input,textarea,button"))return;if(event.key==="ArrowRight"&&state.spread<15){state.spread++;render()}if(event.key==="ArrowLeft"&&state.spread>0){state.spread--;render()}});
-
-spreadEl.addEventListener("input",event=>{
-  if(event.target.matches(".scale-slider")){const value=Number(event.target.value);const labels=value<20?"VISIBLE FLECK":value<45?"MICROPLASTIC":value<72?"FINE MICROPLASTIC":"NANOPLASTIC";event.target.closest(".interaction-box").querySelector(".scale-value").textContent=labels}
-  if(event.target.matches(".bottle-slider")){const litres=Number(event.target.value)/1000;const count=Math.round(240000*litres);event.target.closest(".interaction-box").querySelector(".bottle-value").innerHTML=`${Number(event.target.value).toLocaleString()} mL<br>≈ ${count.toLocaleString()}`}
-  if(event.target.matches(".week-check")){const chosen=[...spreadEl.querySelectorAll(".week-check:checked")].length;spreadEl.querySelector(".checklist-feedback").textContent=`${chosen} small action${chosen===1?"":"s"} picked. Keep your plan simple and doable.`}
-});
-spreadEl.addEventListener("click",event=>{
-  const quiz=event.target.closest("[data-quiz]");if(quiz){quiz.parentElement.querySelectorAll(".choice-button").forEach(button=>button.classList.toggle("selected",button===quiz));const correct=quiz.dataset.quiz==="estimate";spreadEl.querySelector(".quiz-feedback").textContent=correct?"That’s it. The 2019 card comparison came from an uncertain model, not a weekly body measurement.":"Not quite. The headline came from a broad model estimate, not a direct weekly measurement.";return}
-  const flip=event.target.closest("[data-flip]");if(flip){flip.querySelector(".flip-card-inner").textContent="Gyres are large, slow-turning ocean current systems. Floating debris can collect inside them — mixed across a wide area, not stacked into an island.";return}
-  const swap=event.target.closest("[data-swap]");if(swap){swap.parentElement.querySelectorAll(".choice-button").forEach(button=>button.classList.toggle("selected",button===swap));const tips={drink:"Keep a bottle you already own near your keys. Refill at home, a water station or a café that welcomes reusables.",shopping:"Start with a sturdy bag you already have. Look for loose produce and refill options at local markets or bulk shops.",cleaning:"Search for a local refill shop or supermarket refill aisle. Bring a clean container and check the store’s policy."};spreadEl.querySelector(".swap-feedback").textContent=tips[swap.dataset.swap];return}
-  const habit=event.target.closest("[data-habit]");if(habit){habit.parentElement.querySelectorAll(".choice-button").forEach(button=>button.classList.toggle("selected",button===habit));const tips={wear:"A second wear between washes can save water, energy and some fibre shedding.",wash:"A gentler full load can reduce friction and avoid unnecessary wash cycles.",mend:"A quick repair can keep useful clothing in service for longer."};spreadEl.querySelector(".habit-feedback").textContent=tips[habit.dataset.habit];return}
-  const place=event.target.closest("[data-place]");if(place){place.parentElement.querySelectorAll(".choice-button").forEach(button=>button.classList.toggle("selected",button===place));spreadEl.querySelector(".place-feedback").textContent=place.dataset.place==="Australia"?"Search Recycling Near You for council-specific bin and drop-off rules.":"Look up your local council or waste authority. Collection rules vary by place.";return}
-});
-
-if(state.saved>=0&&state.saved<=15&&localStorage.getItem("ocean-bookmark")!==null)state.spread=state.saved;
-if(location.hash==="#book")showBook();else if(location.hash==="#sources")showSources();
