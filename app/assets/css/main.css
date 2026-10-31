@@ -6,12 +6,21 @@
   --font-display: 'Newsreader', Georgia, serif;
   --font-sans: 'DM Sans', Arial, sans-serif;
   --font-mono: 'DM Mono', monospace;
-  --color-paper: #f4f0e6;
-  --color-ink: #293a36;
-  --color-ink-soft: #50625b;
-  --color-sea: #d5e1d4;
-  --color-sea-deep: #47736b;
-  --color-sea-dark: #253e3a;
-  --color-coral: #dd926c;
-  --color-lavender: #a698bc;
+  --color-paper: #f1f7f9;
+  --color-ink: #273c46;
+  --color-ink-soft: #516a74;
+  --color-sea: #d9eaf0;
+  --color-sea-deep: #45798a;
+  --color-sea-dark: #274957;
+  --color-coral: #d98f79;
+  --color-lavender: #a6abc4;
+}
+
+.silk-canvas {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(ellipse at 12% 0%, rgba(255, 255, 255, .92), transparent 42rem),
+    radial-gradient(ellipse at 90% 28%, rgba(194, 221, 231, .33), transparent 46rem),
+    repeating-linear-gradient(119deg, rgba(255, 255, 255, .14) 0 1px, rgba(66, 112, 127, .018) 1px 4px);
+  background-attachment: fixed;
 }

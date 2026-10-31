@@ -6,11 +6,12 @@ const currentView = ref<View>('home')
 useSeoMeta({
   title: 'Small Things, Big Ocean — an interactive field guide',
   description: 'A curious, practical field guide to plastic pollution, microplastics, the Great Pacific Garbage Patch and everyday changes.',
-  themeColor: '#f4f0e6',
+  themeColor: '#f1f7f9',
 })
 
 useHead({
   link: [
+    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' },
   ],
@@ -32,7 +33,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper text-ink">
+  <div class="silk-canvas min-h-screen bg-paper text-ink">
     <header class="site-header flex items-center justify-between px-6 py-5 sm:px-10 lg:px-20">
       <NuxtLink class="wordmark" to="/" aria-label="Small Things, Big Ocean — home" @click="setView('home')">
         <span class="wordmark-mark" aria-hidden="true">✳</span> FIELD NOTES <span class="wordmark-slash">/</span> 001
@@ -49,8 +50,9 @@ onMounted(() => {
       </Transition>
     </main>
 
-    <footer class="site-footer flex items-center justify-between gap-3 px-6 py-5 sm:px-10 lg:px-20">
+    <footer class="site-footer flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-5 sm:px-10 lg:px-20">
       <span>SMALL THINGS, BIG OCEAN <span>·</span> AN INTERACTIVE FIELD GUIDE</span>
+      <span class="creator-credit">Created by Andrew Miao <span aria-hidden="true">·</span> 2026</span>
       <button v-if="currentView !== 'home'" class="text-sea-deep hover:underline" type="button" @click="setView('home')">BACK TO THE TOP ↑</button>
       <a v-else href="#home">BACK TO THE TOP ↑</a>
     </footer>

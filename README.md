@@ -30,7 +30,7 @@ npm run preview
 
 ## Explore
 
-- Turn pages with the arrow buttons or keyboard arrows; jump with the contents list.
+- Turn pages with the left/right edge controls, the arrow buttons or keyboard arrows; jump with the contents list.
 - Save your place and keep a small one-week action plan in browser storage.
 - Explore the particle scale, bottle-volume calculator, credit-card myth check, gyre clue, reuse finder, laundry habits and recycling guide.
 - Open the source shelf to read the linked research and public-health guidance.

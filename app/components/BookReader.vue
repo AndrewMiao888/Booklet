@@ -7,6 +7,7 @@ const spreadIndex = ref(0)
 const savedSpread = ref<number | null>(null)
 const showNotes = ref(false)
 const toastMessage = ref('')
+const turnDirection = ref<'next' | 'previous' | null>(null)
 const currentPages = computed(() => pages.slice(spreadIndex.value * 2, spreadIndex.value * 2 + 2))
 const firstPageNumber = computed(() => spreadIndex.value * 2 + 1)
 const lastPageNumber = computed(() => Math.min(firstPageNumber.value + 1, pages.length))
@@ -20,12 +21,24 @@ const progress = computed(() => `${(lastPageNumber.value / pages.length) * 100}%
 const isSaved = computed(() => savedSpread.value === spreadIndex.value)
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined
+let turnTimer: ReturnType<typeof setTimeout> | undefined
 
 function goToSpread(index: number, scrollToBook = false) {
   spreadIndex.value = Math.max(0, Math.min(Math.ceil(pages.length / 2) - 1, index))
   if (scrollToBook) {
     document.querySelector('#book')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
+}
+
+function turnPage(direction: 'next' | 'previous') {
+  if (turnDirection.value) return
+  const target = spreadIndex.value + (direction === 'next' ? 1 : -1)
+  if (target < 0 || target >= Math.ceil(pages.length / 2)) return
+
+  spreadIndex.value = target
+  turnDirection.value = direction
+  if (turnTimer) clearTimeout(turnTimer)
+  turnTimer = setTimeout(() => { turnDirection.value = null }, 640)
 }
 
 function showToast(message: string) {
@@ -47,8 +60,8 @@ function savePlace() {
 function handleKeydown(event: KeyboardEvent) {
   const target = event.target
   if (!(target instanceof HTMLElement) || target.matches('input, textarea, select, button, [contenteditable="true"]')) return
-  if (event.key === 'ArrowRight') goToSpread(spreadIndex.value + 1)
-  if (event.key === 'ArrowLeft') goToSpread(spreadIndex.value - 1)
+  if (event.key === 'ArrowRight') turnPage('next')
+  if (event.key === 'ArrowLeft') turnPage('previous')
 }
 
 onMounted(() => {
@@ -70,6 +83,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   if (toastTimer) clearTimeout(toastTimer)
+  if (turnTimer) clearTimeout(turnTimer)
 })
 </script>
 
@@ -108,10 +122,13 @@ onBeforeUnmount(() => {
           <div class="spread" :data-first-spread="spreadIndex === 0">
             <BookPage v-for="(page, index) in currentPages" :key="firstPageNumber + index" :page="page" :page-number="firstPageNumber + index" :side="index === 0 ? 'left' : 'right'" @sources="emit('sources')" />
           </div>
+          <div v-if="turnDirection" class="turn-sheet" :class="`turn-sheet--${turnDirection}`" :data-page="String(turnDirection === 'next' ? firstPageNumber - 1 : firstPageNumber + 2).padStart(2, '0')" aria-hidden="true" />
+          <button class="page-turn-hotspot page-turn-hotspot--left" type="button" aria-label="Turn to the previous pages" :disabled="spreadIndex === 0 || Boolean(turnDirection)" @click="turnPage('previous')"><span aria-hidden="true">‹</span></button>
+          <button class="page-turn-hotspot page-turn-hotspot--right" type="button" aria-label="Turn to the next pages" :disabled="spreadIndex >= Math.ceil(pages.length / 2) - 1 || Boolean(turnDirection)" @click="turnPage('next')"><span aria-hidden="true">›</span></button>
         </div>
 
         <div class="reader-controls grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-3">
-          <button class="round-button" type="button" aria-label="Previous pages" :disabled="spreadIndex === 0" @click="goToSpread(spreadIndex - 1)">←</button>
+          <button class="round-button" type="button" aria-label="Previous pages" :disabled="spreadIndex === 0 || Boolean(turnDirection)" @click="turnPage('previous')">←</button>
           <div class="progress-wrap min-w-0">
             <div class="progress-label flex justify-between gap-2">
               <span>PAGES {{ String(firstPageNumber).padStart(2, '0') }}–{{ String(lastPageNumber).padStart(2, '0') }}</span>
@@ -119,7 +136,7 @@ onBeforeUnmount(() => {
             </div>
             <div class="progress-track"><div :style="{ width: progress }" /></div>
           </div>
-          <button class="round-button round-next" type="button" aria-label="Next pages" :disabled="spreadIndex >= Math.ceil(pages.length / 2) - 1" @click="goToSpread(spreadIndex + 1)">→</button>
+          <button class="round-button round-next" type="button" aria-label="Next pages" :disabled="spreadIndex >= Math.ceil(pages.length / 2) - 1 || Boolean(turnDirection)" @click="turnPage('next')">→</button>
         </div>
         <div class="key-hint">TIP <span>use ← and → to turn pages</span> <span class="hide-mobile">· click a chapter to jump</span></div>
 
