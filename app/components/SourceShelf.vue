@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sources } from '~/data/guide'
+import { imageSources, sources } from '~/data/guide'
 
 defineEmits<{ back: [] }>()
 </script>
@@ -16,6 +16,20 @@ defineEmits<{ back: [] }>()
         <h3 class="font-display">{{ source.title }}</h3>
         <p>{{ source.note }}</p>
         <a :href="source.url" target="_blank" rel="noreferrer">{{ source.label }}</a>
+      </article>
+    </div>
+
+    <h3 class="media-source-heading font-display">Image credits</h3>
+    <p class="source-intro">The booklet uses real photographs and maps with visible credit beside each image. These are the original image pages and license notes.</p>
+    <div class="media-source-list grid grid-cols-1 gap-3 md:grid-cols-3">
+      <article v-for="image in imageSources" :key="image.key" class="media-source-card">
+        <img :src="image.src" :alt="image.alt" loading="lazy">
+        <div>
+          <span>{{ image.license }}</span>
+          <h4>{{ image.title }}</h4>
+          <p>{{ image.note }}</p>
+          <a :href="image.sourceUrl" target="_blank" rel="noreferrer">{{ image.credit }} ↗</a>
+        </div>
       </article>
     </div>
 

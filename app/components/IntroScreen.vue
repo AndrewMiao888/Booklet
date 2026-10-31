@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import { imageSources } from '~/data/guide'
+
 const emit = defineEmits<{ open: [] }>()
+const heroImage = imageSources.find(image => image.key === 'beachTrash') ?? imageSources[0]
 </script>
 
 <template>
   <section class="intro-screen grid grid-cols-1 items-center gap-8 px-6 py-10 lg:grid-cols-2 lg:gap-20" aria-labelledby="intro-title">
-    <div class="hero-art w-full" aria-hidden="true">
+    <div class="hero-art w-full">
+      <img v-if="heroImage" class="hero-photo" :src="heroImage.src" :alt="heroImage.alt">
+      <a v-if="heroImage" class="hero-source" :href="heroImage.sourceUrl" target="_blank" rel="noreferrer">{{ heroImage.credit }} / {{ heroImage.license }}</a>
       <div class="hero-star star-a">✳</div>
       <div class="hero-star star-b">✴</div>
       <svg class="hero-ocean" viewBox="0 0 900 490" role="presentation" xmlns="http://www.w3.org/2000/svg">

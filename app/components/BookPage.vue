@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { artSvg, sources, type GuidePage } from '~/data/guide'
+import { artSvg, imageSources, sources, type GuidePage } from '~/data/guide'
 
 const props = defineProps<{
   page: GuidePage
@@ -10,6 +10,7 @@ const props = defineProps<{
 const emit = defineEmits<{ sources: [] }>()
 
 const titleText = computed(() => props.page.title.replace(/<[^>]*>/g, ''))
+const pageMedia = computed(() => imageSources.find(image => image.key === props.page.media))
 const pageClass = computed(() => [
   'book-page',
   props.side === 'right' && 'right-page',
@@ -50,7 +51,14 @@ const pageReferences = computed(() => (props.page.refs ?? []).flatMap((index, ci
     </div>
 
     <div class="page-visual mt-auto">
-      <div v-if="page.cover || page.back" class="cover-graphic" v-html="artSvg(page.art)" />
+      <figure v-if="pageMedia" class="source-photo" :class="{ 'source-photo--cover': page.cover || page.back }">
+        <img :src="pageMedia.src" :alt="pageMedia.alt" loading="lazy">
+        <figcaption>
+          <span>{{ pageMedia.title }}</span>
+          <a :href="pageMedia.sourceUrl" target="_blank" rel="noreferrer">{{ pageMedia.credit }} / {{ pageMedia.license }}</a>
+        </figcaption>
+      </figure>
+      <div v-else-if="page.cover || page.back" class="cover-graphic" v-html="artSvg(page.art)" />
       <template v-else>
         <div class="max-w-full" v-html="artSvg(page.art)" />
         <span class="illustration-caption">FIELD SKETCH / {{ String(pageNumber).padStart(2, '0') }}</span>
